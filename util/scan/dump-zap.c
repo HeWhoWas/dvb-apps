@@ -116,10 +116,11 @@ void zap_dump_service_parameter_set (FILE *f,
 				 int sat_number,
 				 uint16_t video_pid,
 				 uint16_t *audio_pid,
+				 uint16_t teletext_pid,
 				 uint16_t service_id)
 {
 	fprintf (f, "%s:", service_name);
 	zap_dump_dvb_parameters (f, type, p, polarity, sat_number);
-	fprintf (f, ":%i:%i:%i", video_pid, audio_pid[0], service_id);
+	fprintf (f, ":%i:%i:%i:%i", video_pid, audio_pid[0], teletext_pid, service_id);
 	fprintf (f, "\n");
 }

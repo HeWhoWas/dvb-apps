@@ -14,6 +14,7 @@ extern void zap_dump_service_parameter_set (FILE *f,
 				 char polarity, int sat,
 				 uint16_t video_pid,
 				 uint16_t *audio_pid,
+				 uint16_t teletext_pid,
 				 uint16_t service_id);
 
 #endif

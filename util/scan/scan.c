@@ -2477,6 +2477,7 @@ static void dump_lists (void)
 						    sat_number(t),
 						    s->video_pid,
 						    s->audio_pid,
+						    s->teletext_pid,
 						    s->service_id);
 			  default:
 				break;

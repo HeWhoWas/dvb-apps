@@ -268,7 +268,7 @@ static int check_fec(fe_code_rate_t *fec)
 
 int parse(const char *fname, const char *channel,
 	  struct dvb_frontend_parameters *frontend, int *vpid, int *apid,
-	  int *sid)
+	  int *ttxpid, int *sid)
 {
 	int fd;
 	int err;
@@ -345,6 +345,9 @@ int parse(const char *fname, const char *channel,
 
 	if ((err = try_parse_int(fd, sid, "Service ID")))
 	    return -14;
+
+	if ((err = try_parse_int(fd, ttxpid, "Teltext PID")))
+                return -15;
 
 	close(fd);
 	return 0;
@@ -488,9 +491,9 @@ int main(int argc, char **argv)
 	char *confname = NULL;
 	char *channel = NULL;
 	int adapter = 0, frontend = 0, demux = 0, dvr = 0;
-	int vpid, apid, sid, pmtpid = 0;
+	int vpid, apid, sid, pmtpid = 0, ttxpid = 0;
 	int pat_fd, pmt_fd;
-	int frontend_fd, audio_fd = 0, video_fd = 0, dvr_fd, file_fd;
+	int frontend_fd, audio_fd = 0, video_fd = 0, ttx_fd = 0, dvr_fd, file_fd;
 	int opt;
 	int record = 0;
 	int frontend_only = 0;
@@ -588,7 +591,7 @@ int main(int argc, char **argv)
 	printf("reading channels from file '%s'\n", confname);
 	memset(&frontend_param, 0, sizeof(struct dvb_frontend_parameters));
 
-	if (parse (confname, channel, &frontend_param, &vpid, &apid, &sid))
+	if (parse (confname, channel, &frontend_param, &vpid, &apid, &ttxpid, &sid))
 		return -1;
 
 	if ((frontend_fd = open(FRONTEND_DEV, O_RDWR | O_NONBLOCK)) < 0) {
@@ -630,7 +633,7 @@ int main(int argc, char **argv)
 	}
 
 	if (silent<2)
-		fprintf(stderr,"video pid 0x%04x, audio pid 0x%04x\n", vpid, apid);
+		fprintf(stderr,"video pid 0x%04x, audio pid 0x%04x\n, teletext pid 0x%04x", vpid, apid, ttxpid);
 
 	if (set_pesfilter(video_fd, vpid, DMX_PES_VIDEO, dvr) < 0)
 		return -1;
@@ -643,6 +646,14 @@ int main(int argc, char **argv)
 	if (set_pesfilter(audio_fd, apid, DMX_PES_AUDIO, dvr) < 0)
 		return -1;
 
+	if ((ttx_fd = open(DEMUX_DEV, O_RDWR)) < 0) {
+               	PERROR("failed opening '%s'", DEMUX_DEV);
+       		return -1;
+        }
+
+	if (set_pesfilter(ttx_fd, ttxpid, DMX_PES_TELETEXT, dvr) < 0)
+		return -1;
+	
 	signal(SIGALRM,do_timeout);
 	if (timeout > 0)
 		alarm(timeout);
